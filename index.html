@@ -1094,16 +1094,19 @@ function splitChunks(text, max=200) {
   if (isSpaceless || veryFewSpaces) {
     // Split by character count, breaking at sentence punctuation where possible.
     // Handles Chinese/Japanese (。！？), Burmese (danda ၊ ။), and western . ! ?
+    // Aim for ~500 characters per part (roughly 1 minute of speech), but always
+    // break at complete sentences — never mid-sentence.
+    const charMax = 500;
     const sents = cleaned.match(/[^。！？.!?၊။…]+[。！？.!?၊။…]*/g) || [cleaned];
     const out = []; let cur = '';
     for (const s of sents) {
-      if ((cur + s).length > max && cur) {
+      if ((cur + s).length > charMax && cur) {
         out.push(cur.trim());
         cur = s;
-        // if a single sentence is itself longer than max, hard-split it
-        while (cur.length > max) {
-          out.push(cur.slice(0, max).trim());
-          cur = cur.slice(max);
+        // if a single sentence is itself longer than charMax, hard-split it
+        while (cur.length > charMax) {
+          out.push(cur.slice(0, charMax).trim());
+          cur = cur.slice(charMax);
         }
       } else {
         cur += s;
